@@ -7,7 +7,7 @@ namespace thread_pool {
 		}
 		for (auto i = 0; i < workerThreadsCount; ++i) {
 			auto workerThread = std::make_shared<WorkerThread>();
-			this->workerThreads.add(workerThread);
+			this->workerThreads.push_back(workerThread);
 		}
 		this->thread = boost::thread(boost::bind(&ThreadPool::update, this));
 	}

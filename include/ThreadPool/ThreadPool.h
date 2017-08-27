@@ -2,7 +2,6 @@
 
 #include <queue>
 #include <memory>
-#include <ptr_containers.h>
 #include "WorkerThread/WorkerThread.h"
 
 namespace thread_pool {
@@ -22,7 +21,7 @@ namespace thread_pool {
 		virtual ~ThreadPool();
 
 	private:
-		ptr_containers::ptr_vector<std::shared_ptr, WorkerThread> workerThreads;
+		std::vector<std::shared_ptr<WorkerThread> > workerThreads;
 		function_queue_type queuedTasks;
 		boost::thread thread;
 		boost::barrier barrier;

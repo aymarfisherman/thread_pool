@@ -1,6 +1,5 @@
 #pragma once
 
-//#include <SDKDDKVer.h>
 #include <atomic>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
