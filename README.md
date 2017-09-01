@@ -43,4 +43,42 @@ TEST(ThreadPoolTestSuite, ThreadPoolTestClassMethod) {
 	threadPool.join();
 	EXPECT_EQ(i, 100);
 }
+
+class Bar {
+public:
+	Bar() : reported(false) {}
+
+	void work() {
+		this->v = 0;
+		for (auto i = 0; i < 1e8; ++i) {
+			this->v++;
+		}
+	}
+
+	void report() {
+		std::cout << "Computed value is " << this->v << "\n.";
+		this->reported = (this->v == 1e8);
+	}
+
+	bool isOk() {
+		return this->reported;
+	}
+
+	virtual ~Bar() {}
+
+private:
+	int v; //doesn't need to be atomic this time;
+	std::atomic_bool reported;
+};
+
+TEST(ThreadPoolTestSuite, ThreadPoolTestClassMethodCallback) {
+	thread_pool::ThreadPool threadPool(1);
+	Bar bar;
+	// work() will be run in a separate thread, report() will be run in the main thread, after work() has finished;
+	threadPool.queueTask(boost::bind(&Bar::work, &bar), boost::bind(&Bar::report, &bar));
+	while (!bar.isOk()) {
+		threadPool.dispatchCallbacks();
+	}
+	EXPECT_TRUE(bar.isOk());
+}
 ```
