@@ -5,14 +5,17 @@
 #include "WorkerThread/WorkerThread.h"
 
 namespace thread_pool {
+	static void noCallback() {}
+
 	class ThreadPool {
 	public:
-		typedef boost::function<void()> function_type;
-		typedef std::queue<function_type> function_queue_type;
-		
+		typedef TaskData::function_type function_type;
+
 		ThreadPool(int workerThreadsCount);
 		
-		void queueTask(const function_type& task);
+		void dispatchCallbacks();
+
+		void queueTask(const function_type& task, const function_type& callback = boost::bind(noCallback));
 		void join();
 
 		bool isIdle();
@@ -22,7 +25,7 @@ namespace thread_pool {
 
 	private:
 		std::vector<std::shared_ptr<WorkerThread> > workerThreads;
-		function_queue_type queuedTasks;
+		std::queue<TaskData> queuedTasks;
 		boost::thread thread;
 		boost::barrier barrier;
 		boost::mutex threadsMutex;
@@ -32,9 +35,9 @@ namespace thread_pool {
 
 	private:
 		void update();
-		void addTaskToQueue(const function_type& task);
+		void addTaskToQueue(const TaskData& taskData);
 		void handleQueuedTasks();
 		bool hasQueuedTasks();
-		bool tryRunningTask(const function_type& task);
+		bool tryRunningTask(const TaskData& taskData);
 	};
 }

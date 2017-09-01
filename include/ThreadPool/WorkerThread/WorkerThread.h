@@ -1,26 +1,27 @@
 #pragma once
 
 #include <atomic>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/barrier.hpp>
+#include "TaskData/TaskData.h"
 
 namespace thread_pool {
 	class WorkerThread {
 	public:
-		typedef boost::function<void()> function_type;
-
 		WorkerThread();
 				
-		void runTask(const function_type& task);
+		void runTask(const TaskData& taskData);
+		void dispatchCallbacks();
 		bool isIdle();
 
 		virtual ~WorkerThread();
 
-	private:
-		function_type task;
+	private:		
+		TaskData taskData;
+		std::list<TaskData> finishedTasks;
+		boost::mutex finishedMutex;
+
 		boost::thread thread;
 		boost::barrier barrier;
 		std::atomic_bool idle;

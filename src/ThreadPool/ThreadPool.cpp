@@ -12,15 +12,25 @@ namespace thread_pool {
 		this->thread = boost::thread(boost::bind(&ThreadPool::update, this));
 	}
 
-	void ThreadPool::queueTask(const function_type& task) {
-		if (this->tryRunningTask(task)) {
+	void ThreadPool::dispatchCallbacks() {
+		for (auto& workerThread : this->workerThreads) {
+			workerThread->dispatchCallbacks();
+		}
+	}
+
+	void ThreadPool::queueTask(const function_type& task, const function_type& callback) {
+		TaskData taskData(task, callback);
+		if (this->tryRunningTask(taskData)) {
 			return;
 		}
-		this->addTaskToQueue(task);	
+		this->addTaskToQueue(taskData);
 	}
 
 	void ThreadPool::join() {
-		while (!this->isIdle()) {}
+		while (!this->isIdle()) {
+			this->dispatchCallbacks();
+		}
+		this->dispatchCallbacks();
 	}
 
 	bool ThreadPool::isIdle() {
@@ -61,9 +71,9 @@ namespace thread_pool {
 		}
 	}
 
-	void ThreadPool::addTaskToQueue(const function_type& task) {
+	void ThreadPool::addTaskToQueue(const TaskData& taskData) {
 		this->tasksMutex.lock();
-		this->queuedTasks.push(task);
+		this->queuedTasks.push(taskData);
 		this->tasksMutex.unlock();
 		if (this->idle) {
 			this->idle = false;
@@ -73,8 +83,8 @@ namespace thread_pool {
 
 	void ThreadPool::handleQueuedTasks() {
 		this->tasksMutex.lock();
-		function_type& task = this->queuedTasks.front();
-		if (this->tryRunningTask(task)) {
+		TaskData& taskData = this->queuedTasks.front();
+		if (this->tryRunningTask(taskData)) {
 			this->queuedTasks.pop();
 		}
 		this->tasksMutex.unlock();
@@ -87,13 +97,13 @@ namespace thread_pool {
 		return hasTasks;
 	}
 
-	bool ThreadPool::tryRunningTask(const function_type& task) {
+	bool ThreadPool::tryRunningTask(const TaskData& taskData) {
 		this->threadsMutex.lock();
 		for (auto& workerThread : this->workerThreads) {
 			if (!workerThread->isIdle()) {
 				continue;
 			}
-			workerThread->runTask(task);
+			workerThread->runTask(taskData);
 			this->threadsMutex.unlock();
 			return true;
 		}
