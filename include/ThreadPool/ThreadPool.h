@@ -15,7 +15,7 @@ namespace thread_pool {
 		
 		void dispatchCallbacks();
 
-		void queueTask(const function_type& task, const function_type& callback = boost::bind(noCallback));
+		void queueTask(const function_type& task, const function_type& callback = std::bind(noCallback));
 		void join();
 
 		bool isIdle();

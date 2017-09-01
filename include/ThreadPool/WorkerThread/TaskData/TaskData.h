@@ -1,12 +1,11 @@
 #pragma once
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
+#include <functional>
 
 namespace thread_pool {
 	class TaskData {
 	public:
-		typedef boost::function<void()> function_type;
+		typedef std::function<void()> function_type;
 
 		TaskData();
 		TaskData(const function_type& task, const function_type& callback);

@@ -8,7 +8,7 @@ static void increment(std::atomic_int* i) {
 TEST(ThreadPoolTestSuite, ThreadPoolTestStaticFunc) {
 	thread_pool::ThreadPool threadPool(8);
 	std::atomic_int i = 0;
-	boost::function<void()> function = boost::bind(increment, &i);
+	std::function<void()> function = std::bind(increment, &i);
 	for (int i = 0; i < 100; ++i) {
 		threadPool.queueTask(function);
 	}
@@ -31,7 +31,7 @@ TEST(ThreadPoolTestSuite, ThreadPoolTestClassMethod) {
 	thread_pool::ThreadPool threadPool(8);
 	std::atomic_int i = 0;
 	Foo foo;
-	boost::function<void()> function = boost::bind(&Foo::bar, &foo, &i);
+	std::function<void()> function = std::bind(&Foo::bar, &foo, &i);
 	for (int i = 0; i < 100; ++i) {
 		threadPool.queueTask(function);
 	}
@@ -69,7 +69,8 @@ private:
 TEST(ThreadPoolTestSuite, ThreadPoolTestClassMethodCallback) {
 	thread_pool::ThreadPool threadPool(1);
 	Bar bar;
-	threadPool.queueTask(boost::bind(&Bar::work, &bar), boost::bind(&Bar::report, &bar));
+	// work() will be run in a separate thread, report() will be run in the main thread, after work() has finished;
+	threadPool.queueTask(std::bind(&Bar::work, &bar), std::bind(&Bar::report, &bar));
 	while (!bar.isOk()) {
 		threadPool.dispatchCallbacks();
 	}
