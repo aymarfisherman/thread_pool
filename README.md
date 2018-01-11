@@ -13,7 +13,7 @@ static void increment(std::atomic_int* i) {
 TEST(ThreadPoolTestSuite, ThreadPoolTestStaticFunc) {
 	thread_pool::ThreadPool threadPool(8);
 	std::atomic_int i = 0;
-	boost::function<void()> function = boost::bind(increment, &i);
+	std::function<void()> function = std::bind(increment, &i);
 	for (int i = 0; i < 100; ++i) {
 		threadPool.queueTask(function);
 	}
@@ -36,7 +36,7 @@ TEST(ThreadPoolTestSuite, ThreadPoolTestClassMethod) {
 	thread_pool::ThreadPool threadPool(8);
 	std::atomic_int i = 0;
 	Foo foo;
-	boost::function<void()> function = boost::bind(&Foo::bar, &foo, &i);
+	std::function<void()> function = std::bind(&Foo::bar, &foo, &i);
 	for (int i = 0; i < 100; ++i) {
 		threadPool.queueTask(function);
 	}
