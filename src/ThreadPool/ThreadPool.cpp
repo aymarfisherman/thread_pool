@@ -1,7 +1,7 @@
 #include "ThreadPool/ThreadPool.h"
 
 namespace thread_pool {
-	ThreadPool::ThreadPool(int workerThreadsCount) : barrier(2), idle(true), running(true) {
+	ThreadPool::ThreadPool(int workerThreadsCount) : idle(true), running(true) {
 		if (workerThreadsCount <= 0) {
 			throw std::runtime_error("ThreadPool cannot be initiated with 0 or less worker threads.");
 		}
@@ -9,7 +9,7 @@ namespace thread_pool {
 			auto workerThread = std::make_shared<WorkerThread>();
 			this->workerThreads.push_back(workerThread);
 		}
-		this->thread = boost::thread(boost::bind(&ThreadPool::update, this));
+		this->thread = std::thread(std::bind(&ThreadPool::update, this));
 	}
 
 	void ThreadPool::dispatchCallbacks() {
@@ -55,18 +55,18 @@ namespace thread_pool {
 	ThreadPool::~ThreadPool() {
 		this->running = false;
 		if (this->idle) {
-			this->barrier.wait();
+			this->barrier.notify_one();
 		}
 		this->thread.join();
 	}
 
 	void ThreadPool::update() {		
-		this->barrier.wait();
+		this->waitForTasks();
 		while (this->running) {
 			this->handleQueuedTasks();
 			if (!this->hasQueuedTasks()) {
 				this->idle = true;
-				this->barrier.wait();
+				this->waitForTasks();
 			}
 		}
 	}
@@ -77,7 +77,7 @@ namespace thread_pool {
 		this->tasksMutex.unlock();
 		if (this->idle) {
 			this->idle = false;
-			this->barrier.wait();
+			this->barrier.notify_one();
 		}
 	}
 
@@ -109,5 +109,10 @@ namespace thread_pool {
 		}
 		this->threadsMutex.unlock();
 		return false;
+	}
+
+	void ThreadPool::waitForTasks() {
+		std::unique_lock<std::mutex> barrierLock(this->barrierMutex);
+		this->barrier.wait(barrierLock);
 	}
 }

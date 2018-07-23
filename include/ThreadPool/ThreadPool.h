@@ -26,10 +26,11 @@ namespace thread_pool {
 	private:
 		std::vector<std::shared_ptr<WorkerThread> > workerThreads;
 		std::queue<TaskData> queuedTasks;
-		boost::thread thread;
-		boost::barrier barrier;
-		boost::mutex threadsMutex;
-		boost::mutex tasksMutex;
+		std::thread thread;		
+		std::condition_variable barrier;
+		std::mutex barrierMutex;
+		std::mutex threadsMutex;
+		std::mutex tasksMutex;
 		std::atomic_bool idle;
 		std::atomic_bool running;
 
@@ -39,5 +40,6 @@ namespace thread_pool {
 		void handleQueuedTasks();
 		bool hasQueuedTasks();
 		bool tryRunningTask(const TaskData& taskData);
+		void waitForTasks();
 	};
 }

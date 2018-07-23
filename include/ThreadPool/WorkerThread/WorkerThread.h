@@ -1,9 +1,10 @@
 #pragma once
 
+#include <list>
 #include <atomic>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/barrier.hpp>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include "TaskData/TaskData.h"
 
 namespace thread_pool {
@@ -19,15 +20,17 @@ namespace thread_pool {
 
 	private:		
 		TaskData taskData;
-		std::list<TaskData> finishedTasks;
-		boost::mutex finishedMutex;
+		std::list<TaskData> finishedTasks[2];
+		std::mutex finishedMutex;
 
-		boost::thread thread;
-		boost::barrier barrier;
+		std::thread thread;
+		std::mutex barrierMutex;
+		std::condition_variable barrier;
 		std::atomic_bool idle;
 		std::atomic_bool running;
 
 	private:
 		void run();
+		void waitForTasks();
 	};
 }

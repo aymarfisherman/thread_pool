@@ -1,5 +1,5 @@
-common_deps_dir = "D:/workspace/common_deps/"
-reps_dir = "D:/workspace/reps/"
+common_deps_dir = "E:/workspace/common_deps/"
+reps_dir = "E:/workspace/reps/"
 
 workspace "Workspace"
 	configurations {"Debug", "Release"}
@@ -18,11 +18,10 @@ workspace "Workspace"
     filter "configurations:Debug"
 		targetsuffix "_d"
 		defines {"DEBUG", "_DEBUG", "_CRT_SECURE_NO_WARNINGS", "_SCL_SECURE_NO_WARNINGS", "MSVC_IMPLICIT_LINK"}
-		flags {"Symbols", "Unicode"}
+		symbols "On"
 		
 	filter "configurations:Release"        
 		defines {"NDEBUG", "_CRT_SECURE_NO_WARNINGS", "_SCL_SECURE_NO_WARNINGS", "MSVC_IMPLICIT_LINK"}
-		flags {"Unicode"}
 		optimize "On"
 
 project "ThreadPool"
